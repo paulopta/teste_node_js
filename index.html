@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciador de Usuários</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+    body {
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 0 20px;
+      background-color: #f4f4f9;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+    }
+    .input-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px 16px;
+      border: none;
+      background-color: #28a745;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      background: white;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+    }
+    .btn-delete {
+      background-color: #dc3545;
+    }
+    .btn-delete:hover {
+      background-color: #bd2130;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Gerenciador de Usuários</h1>
+
+  <div class="input-container">
+    <input type="text" id="userInput" placeholder="Nome do usuário...">
+    <button onclick="createUser()">Adicionar</button>
+  </div>
+
+  <ul id="userList"></ul>
+
+  <script>
+    // CORRIGIDO: Alterado de '/users' para '/usuarios' para corresponder ao Express
+    const API_URL = 'http://localhost:3000/usuarios';
+
+    // Carrega os usuários ao iniciar a página
+    document.addEventListener('DOMContentLoaded', fetchUsers);
+
+    // 1. READ: Listar usuários (GET)
+    async function fetchUsers() {
+      try {
+        const response = await fetch(API_URL);
+        if (!response.ok) throw new Error('Erro ao buscar usuários');
+        
+        const users = await response.json();
+        renderUsers(users);
+      } catch (error) {
+        console.error('Erro na requisição GET:', error);
+      }
+    }
+
+    // Renderiza os itens na tela
+    function renderUsers(users) {
+      const list = document.getElementById('userList');
+      list.innerHTML = '';
+
+      users.forEach(user => {
+        const li = document.createElement('li');
+        
+        li.innerHTML = `
+          <div class="user-info">
+            <span><strong>#${user.id}</strong> - ${user.nome}</span>
+          </div>
+          <button class="btn-delete" onclick="deleteUser(${user.id})">Excluir</button>
+        `;
+
+        list.appendChild(li);
+      });
+    }
+
+    // 2. CREATE: Adicionar novo usuário (POST)
+    async function createUser() {
+      const input = document.getElementById('userInput');
+      const nome = input.value.trim();
+
+      if (!nome) return;
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            nome: nome
+          })
+        });
+
+        if (!response.ok) throw new Error('Erro ao criar usuário');
+
+        input.value = '';
+        fetchUsers(); // Recarrega a lista
+      } catch (error) {
+        console.error('Erro na requisição POST:', error);
+      }
+    }
+
+    // 3. DELETE: Remover usuário (DELETE)
+    async function deleteUser(id) {
+      try {
+        const response = await fetch(`${API_URL}/${id}`, {
+          method: 'DELETE'
+        });
+
+        if (!response.ok) throw new Error('Erro ao deletar usuário');
+
+        fetchUsers(); // Recarrega a lista
+      } catch (error) {
+        console.error('Erro na requisição DELETE:', error);
+      }
+    }
+  </script>
+</body>
+</html>
